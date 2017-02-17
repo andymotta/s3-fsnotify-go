@@ -27,6 +27,16 @@ func main() {
 		log.Fatalln("filename env var must be set")
 	}
 
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		os.Create(filename)
+	}
+
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatalln("Unable to open file", err)
+	}
+	defer file.Close()
+
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
@@ -39,11 +49,6 @@ func main() {
 				log.Println("event:", event)
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					log.Println("modified file:", event.Name)
-					file, err := os.Open(filename)
-					if err != nil {
-						log.Fatalln("Unable to open file", err)
-					}
-					defer file.Close()
 
 					uploader := s3manager.NewUploader(sess)
 
