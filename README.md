@@ -1,9 +1,17 @@
 # s3-fsnotify-go
-Watches a file for changes and to S3 on change.  Tested on Darwin and Linux.
+Watches a directory for changes and uploads modified or created files to S3.  Tested on Darwin and Linux.
 
-You will need to set the following environment variables for this to work:
+The best way to run this is with a failure-tolerant init script.  go2s3.service is a systemd exmaple.  Here are some installation notes:
 ```bash
-export filename=/path/to/filetowatch.json
+vim /usr/lib/systemd/system/go2s3.service
+sudo systemctl enable go2s3.service
+service go2s3 status
+service go2s3 start
+```
+
+Alternatively, you can set environment variables:
+```bash
+export syncdir=.
 export bucket=bucket-to-upload-to
 ```
 
@@ -23,20 +31,8 @@ Make sure this ^ user can PutObject on the bucket you are specifying.
 
 Test Run:
 ```bash
-$ export filename=file
-$ export bucket=andy-cloudfront-dev
-$ s3-fsnotify-go &
-[1] 11446
-
-$ echo "Hello World" > file
-$ Successfully uploaded%!(EXTRA string=file, string=andy-cloudfront-dev)2017/02/16 23:03:59 event: "file": WRITE
-2017/02/16 23:03:59 modified file: file
-Successfully uploaded%!(EXTRA string=file, string=andy-cloudfront-dev)2017/02/16 23:04:00 event: "file": CHMOD
-$ aws s3 ls s3://andy-cloudfront-dev/
-2017-02-16 23:04:00         14 file
-
-$ echo "" > file
-$ Successfully uploaded%!(EXTRA string=file, string=andy-cloudfront-dev)2017/02/16 23:04:13 event: "file": CHMOD
-$ aws s3 ls s3://andy-cloudfront-dev/
-2017-02-16 23:04:13          0 file
+$ systemctl start go2s3
+$ touch outputs.json
+Feb 22 20:39:33  s3-fsnotify-go[1503]: 2017/02/22 20:39:33 modified file: ./outputs.json
+Feb 22 20:39:35  s3-fsnotify-go[1503]: Successfully uploaded ./outputs.json to bucket-to-upload-to
 ```
