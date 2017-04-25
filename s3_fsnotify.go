@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -41,16 +43,12 @@ func main() {
 	}
 	syncdir := os.Getenv("syncdir")
 	if syncdir == "" {
-		log.Fatalln("syncdir env var must be set")
+		syncdir = "."
 	}
 
 	if _, err := os.Stat(syncdir); os.IsNotExist(err) {
-		os.Create(syncdir)
+		os.MkdirAll(syncdir, os.ModePerm)
 	}
-
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
 
 	done := make(chan bool)
 	go func() {
@@ -58,18 +56,21 @@ func main() {
 			select {
 			case event := <-watcher.Events:
 				log.Println("event:", event)
-				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
+				if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create && !excludeFileExt(event.Name) {
 					log.Println("modified file:", event.Name)
 					file, err := os.Open(event.Name)
 					if err != nil {
 						log.Fatalln("Unable to open file", err)
 					}
 					defer file.Close()
-
+					filename := path.Base(event.Name)
+					sess := session.Must(session.NewSessionWithOptions(session.Options{
+						SharedConfigState: session.SharedConfigEnable,
+					}))
 					uploader := s3manager.NewUploader(sess)
 					_, err = uploader.Upload(&s3manager.UploadInput{
 						Bucket:               aws.String(bucket),
-						Key:                  aws.String(event.Name),
+						Key:                  aws.String(filename),
 						Body:                 file,
 						ServerSideEncryption: aws.String("AES256"),
 						ContentType:          aws.String(getContentType(file)),
@@ -105,4 +106,17 @@ func getContentType(file *os.File) string {
 		}
 	}
 	return result
+}
+
+func excludeFileExt(path string) bool {
+	var extension = filepath.Ext(path)
+	switch extension {
+	case ".swp":
+		return true
+	case ".tmp":
+		return true
+	default:
+		return false
+	}
+	return false
 }

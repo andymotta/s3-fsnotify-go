@@ -6,13 +6,11 @@ Description=This will watch for new files and upload them to s3
 User=root
 Group=root
 
-WorkingDirectory=/syncme
-
-Restart=on-failure
-
-Environment="syncdir=." "bucket=bucket-to-upload-to"
+Environment="syncdir=/directory/to/sync/" "bucket=bucket-to-upload-to"
 
 ExecStart=/root/bin/s3-fsnotify-go
+
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
