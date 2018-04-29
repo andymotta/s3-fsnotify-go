@@ -1,4 +1,7 @@
 # s3-fsnotify-go
+
+[![Build Status](https://travis-ci.org/andymotta/s3-fsnotify-go.svg?branch=master)](https://travis-ci.org/andymotta/s3-fsnotify-go)
+
 Watches a directory for changes and uploads modified or created files to S3.  Tested on Darwin, Linux and Windows 386.
 
 The best way to run this is with a failure-tolerant init script.  go2s3.service is a systemd example.  Here are some installation notes:
