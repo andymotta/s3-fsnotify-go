@@ -3,21 +3,21 @@ language: go
 go:
   - "1.10.x"
 
-go_import_path: github.com/andymotta/s3-fsnotify-go
+before_install:
+  - go get -t ./...
 
 install:
   - go get github.com/mitchellh/gox
 
 script:
-  - mkdir build
-  - gox -os="linux darwin windows" -arch="amd64 386" -output="build/{{.Dir}}_{{.OS}}_{{.Arch}}"
+  - gox -os="linux darwin windows" -arch="amd64 386" -output="{{.Dir}}_{{.OS}}_{{.Arch}}"
 
 deploy:
   provider: releases
   skip_cleanup: true
   api_key: $GITHUB_TOKEN
   file_glob: true
-  file: '$TRAVIS_BUILD_DIR/build/*'
+  file: '$TRAVIS_BUILD_DIR/*'
   overwrite: true
   on:
     tags: true
