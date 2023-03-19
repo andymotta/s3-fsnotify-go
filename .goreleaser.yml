@@ -1,0 +1,26 @@
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: go2s3
+    main: main.go
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    files:
+      - go2s3.service
+
+checksum:
+  name_template: 'checksums.txt'

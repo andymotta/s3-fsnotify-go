@@ -11,6 +11,3 @@ Environment="syncdir=/directory/to/sync/" "bucket=bucket-to-upload-to"
 ExecStart=/root/bin/s3-fsnotify-go
 
 Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
