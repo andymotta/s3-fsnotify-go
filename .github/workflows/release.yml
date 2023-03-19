@@ -8,22 +8,23 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    container:
+      image: golang:1.20
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.20
 
       - name: Install dependencies
         run: go mod download
 
       - name: Install goreleaser
-        run: curl -sL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
+        run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/sources.list.d/goreleaser.list
+          apt update
+          apt -y install goreleaser
 
       - name: Run goreleaser
         run: |
+          cd $GITHUB_WORKSPACE
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          ./bin/goreleaser
+          goreleaser
